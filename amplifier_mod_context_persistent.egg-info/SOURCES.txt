@@ -1,0 +1,10 @@
+LICENSE
+README.md
+pyproject.toml
+amplifier_mod_context_persistent/__init__.py
+amplifier_mod_context_persistent.egg-info/PKG-INFO
+amplifier_mod_context_persistent.egg-info/SOURCES.txt
+amplifier_mod_context_persistent.egg-info/dependency_links.txt
+amplifier_mod_context_persistent.egg-info/entry_points.txt
+amplifier_mod_context_persistent.egg-info/requires.txt
+amplifier_mod_context_persistent.egg-info/top_level.txt

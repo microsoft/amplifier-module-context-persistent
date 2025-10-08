@@ -1,0 +1,16 @@
+[project]
+name = "amplifier-module-context-persistent"
+version = "0.1.0"
+description = "Persistent context manager for Amplifier - loads context files across sessions"
+requires-python = ">=3.11"
+dependencies = [
+    "amplifier-core>=0.1.0",
+    "amplifier-module-context-simple>=0.1.0"
+]
+
+[project.entry-points."amplifier.modules"]
+context-persistent = "amplifier_mod_context_persistent:mount"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,2 @@
+[amplifier.modules]
+context-persistent = amplifier_mod_context_persistent:mount
