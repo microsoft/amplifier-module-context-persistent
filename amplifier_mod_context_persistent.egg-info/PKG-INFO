@@ -1,9 +1,0 @@
-Metadata-Version: 2.4
-Name: amplifier-mod-context-persistent
-Version: 0.1.0
-Summary: Persistent context manager for Amplifier - loads context files across sessions
-Requires-Python: >=3.11
-License-File: LICENSE
-Requires-Dist: amplifier-core>=0.1.0
-Requires-Dist: amplifier-mod-context-simple>=0.1.0
-Dynamic: license-file

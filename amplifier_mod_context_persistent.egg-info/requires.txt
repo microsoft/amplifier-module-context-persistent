@@ -1,2 +1,0 @@
-amplifier-core>=0.1.0
-amplifier-mod-context-simple>=0.1.0
