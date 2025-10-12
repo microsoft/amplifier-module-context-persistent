@@ -9,7 +9,7 @@ from typing import Any
 from typing import Optional
 
 from amplifier_core import ModuleCoordinator
-from amplifier_module_context_simple import SimpleContextManager
+from amplifier_mod_context_simple import SimpleContextManager
 
 logger = logging.getLogger(__name__)
 
