@@ -2,15 +2,40 @@
 name = "amplifier-module-context-persistent"
 version = "0.1.0"
 description = "Persistent context manager for Amplifier - loads context files across sessions"
+license = "MIT"
 requires-python = ">=3.11"
+authors = [
+    { name = "Microsoft MADE:Explorations Team" },
+]
 dependencies = [
-    "amplifier-core>=0.1.0",
-    "amplifier-module-context-simple>=0.1.0"
+    "amplifier-core",
+    "amplifier-module-context-simple",
 ]
 
 [project.entry-points."amplifier.modules"]
-context-persistent = "amplifier_mod_context_persistent:mount"
+context-persistent = "amplifier_module_context_persistent:mount"
 
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = [
+    "hatchling",
+]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.uv.sources.amplifier-core]
+path = "../amplifier-core"
+editable = true
+
+[tool.uv.sources.amplifier-module-context-simple]
+path = "../amplifier-module-context-simple"
+editable = true
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "amplifier_module_context_persistent",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true

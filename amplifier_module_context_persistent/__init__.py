@@ -6,10 +6,9 @@ Extends SimpleContextManager with file loading capabilities for cross-session me
 import logging
 from pathlib import Path
 from typing import Any
-from typing import Optional
 
 from amplifier_core import ModuleCoordinator
-from amplifier_mod_context_simple import SimpleContextManager
+from amplifier_module_context_simple import SimpleContextManager
 
 logger = logging.getLogger(__name__)
 

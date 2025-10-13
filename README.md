@@ -14,11 +14,26 @@ Enable AI assistants to maintain context across sessions by loading project-spec
 - **Clear Context Labeling**: Each loaded file is labeled in the system message
 - **Home Directory Expansion**: Supports `~/` paths
 
+## Prerequisites
+
+- **Python 3.11+**
+- **[UV](https://github.com/astral-sh/uv)** - Fast Python package manager
+
+### Installing UV
+
+```bash
+# macOS/Linux/WSL
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
 ## Installation
 
 ```bash
 cd amplifier-next/amplifier-module-context-persistent
-pip install -e .
+uv pip install -e .
 ```
 
 ## Configuration
