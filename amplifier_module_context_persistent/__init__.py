@@ -132,12 +132,12 @@ class PersistentContextManager(SimpleContextManager):
             system_msgs = [m for m in self.messages if m.get("role") == "system"]
 
             error_lines = [
-                f"Memory files exceed context limit!",
-                f"",
+                "Memory files exceed context limit!",
+                "",
                 f"Total tokens: {self._token_count:,} > {self.max_tokens:,} max",
                 f"Loaded {len(system_msgs)} system messages from {len(self.memory_files)} files",
-                f"",
-                f"File breakdown:",
+                "",
+                "File breakdown:",
             ]
 
             # Show approximate tokens per file
@@ -151,11 +151,11 @@ class PersistentContextManager(SimpleContextManager):
 
             error_lines.extend(
                 [
-                    f"",
-                    f"Suggestions:",
-                    f"  1. Remove or reduce memory files in your profile",
-                    f"  2. Increase max_tokens in context config",
-                    f"  3. Split large files into smaller focused files",
+                    "",
+                    "Suggestions:",
+                    "  1. Remove or reduce memory files in your profile",
+                    "  2. Increase max_tokens in context config",
+                    "  3. Split large files into smaller focused files",
                 ]
             )
 
