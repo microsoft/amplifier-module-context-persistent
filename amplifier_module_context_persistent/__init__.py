@@ -67,8 +67,12 @@ class PersistentContextManager(SimpleContextManager):
     async def initialize(self) -> None:
         """
         Initialize and load memory files at session start.
+
+        Raises:
+            RuntimeError: If loaded memory files exceed context limit
         """
         await self._load_memory_files()
+        await self._validate_startup_context()
 
     async def _load_memory_files(self) -> None:
         """
@@ -115,3 +119,46 @@ class PersistentContextManager(SimpleContextManager):
         # Log final state
         system_msgs = [m for m in self.messages if m.get("role") == "system"]
         logger.info(f"Context initialized with {len(system_msgs)} system messages")
+
+    async def _validate_startup_context(self) -> None:
+        """
+        Validate that loaded context doesn't exceed limits.
+
+        Raises:
+            RuntimeError: If context exceeds max_tokens after loading memory files
+        """
+        if self._token_count > self.max_tokens:
+            # Build diagnostic message
+            system_msgs = [m for m in self.messages if m.get("role") == "system"]
+
+            error_lines = [
+                f"Memory files exceed context limit!",
+                f"",
+                f"Total tokens: {self._token_count:,} > {self.max_tokens:,} max",
+                f"Loaded {len(system_msgs)} system messages from {len(self.memory_files)} files",
+                f"",
+                f"File breakdown:",
+            ]
+
+            # Show approximate tokens per file
+            for msg in system_msgs:
+                content = msg.get("content", "")
+                # Extract filename from label
+                first_line = content.split("\n", 1)[0]
+                filename = first_line.replace("[Context from ", "").replace("]", "")
+                msg_tokens = len(content) // 4
+                error_lines.append(f"  - {filename}: ~{msg_tokens:,} tokens")
+
+            error_lines.extend(
+                [
+                    f"",
+                    f"Suggestions:",
+                    f"  1. Remove or reduce memory files in your profile",
+                    f"  2. Increase max_tokens in context config",
+                    f"  3. Split large files into smaller focused files",
+                ]
+            )
+
+            error_msg = "\n".join(error_lines)
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
