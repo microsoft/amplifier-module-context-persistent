@@ -4,7 +4,7 @@ A context manager that extends SimpleContextManager with persistent file loading
 
 ## Purpose
 
-Enable AI assistants to maintain context across sessions by loading project-specific context files (CLAUDE.md, AGENTS.md, PROJECT.md, etc.) at session start. This allows teams to maintain consistent AI behavior and knowledge without manually injecting context each time.
+Enable AI assistants to maintain context across sessions by loading project-specific context files (AGENTS.md, PROJECT.md, etc.) at session start. This allows teams to maintain consistent AI behavior and knowledge without manually injecting context each time.
 
 ## Features
 
@@ -47,10 +47,9 @@ context = "context-persistent"
 [context]
 # List of context files to load at session start
 memory_files = [
-    "./CLAUDE.md",
     "./AGENTS.md",
     "./PROJECT.md",
-    "~/projects/shared/TEAM_CONTEXT.md"
+    "~/.amplifier/AGENTS.md"
 ]
 
 # Standard context manager settings
@@ -62,7 +61,7 @@ compact_threshold = 0.92
 
 1. **Session Start**: When mounted, the module loads all configured files
 2. **File Processing**: Each file is read and added as a system message
-3. **Context Labeling**: Files are clearly labeled (e.g., `[Context from CLAUDE.md]`)
+3. **Context Labeling**: Files are clearly labeled (e.g., `[Context from AGENTS.md]`)
 4. **Error Handling**: Missing or unreadable files are skipped with warnings
 5. **Normal Operation**: After loading, behaves like SimpleContextManager
 
@@ -75,7 +74,7 @@ Currently supports plain text files (Markdown, text, etc.). Files are read as UT
 ```python
 {
     'role': 'system',
-    'content': '[Context from CLAUDE.md]\n\n# CLAUDE.md\n\nThis file provides guidance...'
+    'content': '[Context from AGENTS.md]\n\n# AGENTS.md\n\nThis file provides guidance...'
 }
 ```
 
@@ -101,6 +100,7 @@ class PersistentContextManager(SimpleContextManager):
 ## Philosophy
 
 This module follows the ruthless simplicity principle:
+
 - **Simple file loading**: Just read files and add as system messages
 - **No complex watching**: Files are loaded once at session start
 - **Fail gracefully**: Missing files don't crash the system
@@ -138,14 +138,15 @@ Individual developer preferences:
 
 ```toml
 memory_files = [
-    "~/.config/amplifier/MY_PREFERENCES.md",
-    "./CLAUDE.md"
+    "~/.amplifier/AGENTS.md",
+    "./amplifier/local/AGENTS.md"
 ]
 ```
 
 ## Logging
 
 The module logs at various levels:
+
 - **INFO**: Successful file loads, mount status
 - **WARNING**: Missing files
 - **ERROR**: File read failures
@@ -161,6 +162,7 @@ The module logs at various levels:
 ## Future Enhancements (Not Implemented)
 
 Potential future features that maintain simplicity:
+
 - File watching for reload on changes
 - TOML/JSON parsing for structured context
 - Selective context persistence
