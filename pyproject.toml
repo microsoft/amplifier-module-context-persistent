@@ -7,9 +7,7 @@ requires-python = ">=3.11"
 authors = [
     { name = "Microsoft MADE:Explorations Team" },
 ]
-dependencies = [
-    "amplifier-module-context-simple",
-]
+dependencies = []
 
 [project.entry-points."amplifier.modules"]
 context-persistent = "amplifier_module_context_persistent:mount"
@@ -22,10 +20,6 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 package = true
-
-[tool.uv.sources.amplifier-module-context-simple]
-path = "../amplifier-module-context-simple"
-editable = true
 
 [tool.hatch.build.targets.wheel]
 packages = [
