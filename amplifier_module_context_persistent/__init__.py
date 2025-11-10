@@ -189,11 +189,30 @@ class PersistentContextManager:
                         break
                     offset += 1
 
-            # Ensure tool message keeps previous assistant tool_call
-            elif msg.get("role") == "tool" and idx > 0:
-                prev = self.messages[idx - 1]
-                if prev.get("role") == "assistant" and prev.get("tool_calls"):
-                    expanded.add(idx - 1)
+            # Ensure tool message keeps the assistant with tool_calls
+            # Walk backwards to find it (may be multiple tool results after one assistant)
+            elif msg.get("role") == "tool":
+                # Find the assistant message with tool_calls that this result belongs to
+                for j in range(idx - 1, -1, -1):
+                    check_msg = self.messages[j]
+                    if check_msg.get("role") == "assistant" and check_msg.get("tool_calls"):
+                        expanded.add(j)
+                        logger.debug(
+                            "Preserving tool group: message %d (assistant with tool_calls) includes tool result at %d",
+                            j,
+                            idx,
+                        )
+                        break
+                    if check_msg.get("role") != "tool":
+                        # Hit a non-tool, non-assistant-with-tool_calls message before finding the assistant
+                        # This shouldn't happen in well-formed conversation but log if it does
+                        logger.warning(
+                            "Tool result at %d has no matching assistant with tool_calls (found %s at %d instead)",
+                            idx,
+                            check_msg.get("role"),
+                            j,
+                        )
+                        break
 
         compacted = [self.messages[i] for i in sorted(expanded)]
 

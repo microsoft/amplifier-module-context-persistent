@@ -97,6 +97,23 @@ class PersistentContextManager(SimpleContextManager):
     async def clear(self) -> None
 ```
 
+## Compaction Strategy
+
+Inherits compaction strategy from SimpleContextManager with full tool pair preservation:
+
+- **Keeps**: All system messages + last 10 conversation messages
+- **Deduplicates**: Non-tool messages (based on role and first 100 chars of content)
+- **Preserves tool pairs**: Tool_use and tool_result messages are treated as atomic units
+  - If keeping assistant message with tool_calls, keeps all subsequent tool result messages
+  - If keeping tool message, walks backwards to find and keep the assistant with tool_calls
+  - Never deduplicates tool-related messages (each has unique ID)
+
+### Tool Pair Preservation
+
+Anthropic API requires that every tool_use in message N has matching tool_result messages immediately following. The context manager preserves these as atomic units during compaction to maintain conversation state integrity and prevent API errors.
+
+**Critical implementation detail**: When an assistant message has multiple tool_calls, there are multiple consecutive tool_result messages after it. The compaction logic walks backwards through these tool results to find the originating assistant message, ensuring the entire tool group is preserved as an atomic unit. This prevents orphaned tool results that would cause API validation errors.
+
 ## Philosophy
 
 This module follows the ruthless simplicity principle:
