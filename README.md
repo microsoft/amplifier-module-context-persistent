@@ -32,7 +32,7 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ## Installation
 
 ```bash
-cd amplifier-next/amplifier-module-context-persistent
+cd amplifier-module-context-persistent
 uv pip install -e .
 ```
 
