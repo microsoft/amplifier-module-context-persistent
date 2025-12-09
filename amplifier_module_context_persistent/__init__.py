@@ -8,6 +8,9 @@ Implements a standalone context manager that provides:
 
 from __future__ import annotations
 
+# Amplifier module metadata
+__amplifier_module_type__ = "context"
+
 import logging
 from pathlib import Path
 from typing import Any
