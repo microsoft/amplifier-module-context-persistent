@@ -170,27 +170,38 @@ class PersistentContextManager:
         for idx in keep_indices:
             msg = self.messages[idx]
 
-            # Preserve assistant tool_calls with subsequent tool results
+            # Preserve assistant tool_calls with matching tool results
             if msg.get("role") == "assistant" and msg.get("tool_calls"):
-                num_calls = len(msg["tool_calls"])
+                # Collect the tool_call IDs we need to find results for
+                expected_tool_ids = set()
+                for tc in msg["tool_calls"]:
+                    if tc:
+                        tool_id = tc.get("id") or tc.get("tool_call_id")
+                        if tool_id:
+                            expected_tool_ids.add(tool_id)
+
+                # Scan forward to find matching tool results (may not be immediately adjacent
+                # due to hook-injected context messages between assistant and tool results)
                 kept_results = 0
-                offset = 1
-                while kept_results < num_calls and idx + offset < len(self.messages):
-                    next_msg = self.messages[idx + offset]
-                    if next_msg.get("role") == "tool":
-                        expanded.add(idx + offset)
-                        kept_results += 1
-                    else:
-                        logger.warning(
-                            "Assistant tool message at %d expected %d tool results, "
-                            "encountered non-tool message at %d after %d results",
-                            idx,
-                            num_calls,
-                            idx + offset,
-                            kept_results,
-                        )
-                        break
-                    offset += 1
+                for j in range(idx + 1, len(self.messages)):
+                    candidate = self.messages[j]
+                    if candidate.get("role") == "tool":
+                        tool_id = candidate.get("tool_call_id")
+                        if tool_id in expected_tool_ids:
+                            expanded.add(j)
+                            expected_tool_ids.discard(tool_id)
+                            kept_results += 1
+                            if not expected_tool_ids:
+                                break  # Found all tool results
+
+                if expected_tool_ids:
+                    logger.warning(
+                        "Message %d has %d tool_calls but only %d matching tool results found (missing IDs: %s)",
+                        idx,
+                        len(msg["tool_calls"]),
+                        kept_results,
+                        expected_tool_ids,
+                    )
 
             # Ensure tool message keeps the assistant with tool_calls
             # Walk backwards to find it (may be multiple tool results after one assistant)
