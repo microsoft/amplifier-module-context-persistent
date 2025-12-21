@@ -237,7 +237,10 @@ class PersistentContextManager:
             if msg.get("role") == "tool" or (msg.get("role") == "assistant" and msg.get("tool_calls")):
                 final.append(msg)
             else:
-                key = (msg.get("role"), msg.get("content", "")[:100])
+                # Content may be a string or list of blocks - convert to string for hashing
+                content = msg.get("content", "")
+                content_str = str(content) if not isinstance(content, str) else content
+                key = (msg.get("role"), content_str[:100])
                 if key not in seen:
                     seen.add(key)
                     final.append(msg)
