@@ -2,7 +2,7 @@
 Persistent context manager module.
 
 Implements a standalone context manager that provides:
-  • Message storage with token accounting and compaction (matches SimpleContextManager behaviour)
+  • Message storage with token accounting and internal compaction
   • Optional loading of persistent memory files on initialization
 """
 
@@ -51,8 +51,12 @@ async def mount(coordinator: ModuleCoordinator, config: dict[str, Any] | None = 
 
 class PersistentContextManager:
     """
-    Context manager with message storage, token counting, compaction, and
-    optional persistent memory file loading.
+    Context manager with message storage, token counting, internal compaction,
+    and optional persistent memory file loading.
+
+    Owns memory policy: orchestrators ask for messages via get_messages_for_request(),
+    and this context manager decides how to fit them within limits. Compaction is
+    handled internally - orchestrators don't know or care about compaction.
     """
 
     def __init__(
@@ -83,18 +87,16 @@ class PersistentContextManager:
     async def add_message(self, message: dict[str, Any]) -> None:
         """Add a message to the context.
 
-        Note: This method always accepts messages without hard limits.
-        Compaction is handled by the orchestrator at strategic points
-        (before LLM requests) to keep context within bounds.
+        Messages are always accepted. Compaction happens internally when
+        get_messages_for_request() is called before LLM requests.
 
         Tool results MUST be added even if over threshold, otherwise
-        tool_use/tool_result pairing breaks. The orchestrator will
-        compact before the next LLM request.
+        tool_use/tool_result pairing breaks.
         """
         # Estimate tokens for this message
         message_tokens = len(str(message)) // 4
 
-        # Add message (no rejection - compaction happens at orchestrator level)
+        # Add message (no rejection - compaction happens internally)
         self.messages.append(message)
         self._token_count += message_tokens
 
@@ -102,7 +104,7 @@ class PersistentContextManager:
         usage = self._token_count / self.max_tokens
         if usage > 1.0:
             logger.warning(
-                "Context at %.1f%% of max (%d/%d tokens). Compaction will run before next LLM request.",
+                "Context at %.1f%% of max (%d/%d tokens). Compaction will run on next get_messages_for_request() call.",
                 usage * 100,
                 self._token_count,
                 self.max_tokens,
@@ -116,8 +118,30 @@ class PersistentContextManager:
             usage * 100,
         )
 
+    async def get_messages_for_request(self, token_budget: int | None = None) -> list[dict[str, Any]]:
+        """
+        Get messages ready for an LLM request.
+
+        Handles compaction internally if needed. Orchestrators call this before
+        every LLM request and trust the context manager to return messages that
+        fit within limits.
+
+        Args:
+            token_budget: Optional token limit. If None, uses configured max.
+
+        Returns:
+            Messages ready for LLM request, compacted if necessary.
+        """
+        budget = token_budget or self.max_tokens
+
+        # Check if compaction needed
+        if self._should_compact(budget):
+            await self._compact_internal()
+
+        return self.messages.copy()
+
     async def get_messages(self) -> list[dict[str, Any]]:
-        """Return a shallow copy of stored messages."""
+        """Get all messages (raw, uncompacted) for transcripts/debugging."""
         return self.messages.copy()
 
     async def set_messages(self, messages: list[dict[str, Any]]) -> None:
@@ -132,17 +156,18 @@ class PersistentContextManager:
         self._token_count = 0
         logger.info("Context cleared")
 
-    async def should_compact(self) -> bool:
-        """Return True if compaction is recommended."""
-        usage = self._token_count / self.max_tokens
+    def _should_compact(self, budget: int | None = None) -> bool:
+        """Internal: Check if compaction is recommended."""
+        effective_budget = budget or self.max_tokens
+        usage = self._token_count / effective_budget
         should = usage >= self.compact_threshold
         if should:
-            logger.info("Context at %.1f%% capacity, compaction recommended", usage * 100)
+            logger.info("Context at %.1f%% capacity, compaction needed", usage * 100)
         return should
 
-    async def compact(self) -> None:
+    async def _compact_internal(self) -> None:
         """
-        Compact the context while preserving tool_use/tool_result pairs.
+        Internal: Compact the context while preserving tool_use/tool_result pairs.
 
         Tool usage continuity is required by providers that expect tool result
         messages immediately following tool_calls. We treat these as atomic units.

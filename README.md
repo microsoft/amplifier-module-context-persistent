@@ -91,9 +91,8 @@ class PersistentContextManager(SimpleContextManager):
 
     # Inherited from SimpleContextManager:
     async def add_message(self, message: dict[str, Any]) -> None
-    async def get_messages(self) -> list[dict[str, Any]]
-    async def should_compact(self) -> bool
-    async def compact(self) -> None
+    async def get_messages() -> list[dict[str, Any]]  # Raw access for debugging
+    async def get_messages_for_request(token_budget: int | None = None) -> list[dict[str, Any]]  # For LLM requests
     async def clear(self) -> None
 ```
 
