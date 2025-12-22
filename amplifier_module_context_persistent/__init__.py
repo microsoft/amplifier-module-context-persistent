@@ -100,16 +100,7 @@ class PersistentContextManager:
         self.messages.append(message)
         self._token_count += message_tokens
 
-        # Warn if significantly over threshold (but don't reject)
         usage = self._token_count / self.max_tokens
-        if usage > 1.0:
-            logger.warning(
-                "Context at %.1f%% of max (%d/%d tokens). Compaction will run on next get_messages_for_request() call.",
-                usage * 100,
-                self._token_count,
-                self.max_tokens,
-            )
-
         logger.debug(
             "Added message: %s - %d total messages, %d tokens (%.1f%%)",
             message.get("role", "unknown"),
