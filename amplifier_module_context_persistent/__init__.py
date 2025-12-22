@@ -109,7 +109,11 @@ class PersistentContextManager:
             usage * 100,
         )
 
-    async def get_messages_for_request(self, token_budget: int | None = None) -> list[dict[str, Any]]:
+    async def get_messages_for_request(
+        self,
+        token_budget: int | None = None,
+        provider: Any | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Get messages ready for an LLM request.
 
@@ -118,12 +122,14 @@ class PersistentContextManager:
         fit within limits.
 
         Args:
-            token_budget: Optional token limit. If None, uses configured max.
+            token_budget: Optional explicit token limit (deprecated, prefer provider).
+            provider: Optional provider instance for dynamic budget calculation.
+                If provided, budget = context_window - max_output_tokens - safety_margin.
 
         Returns:
             Messages ready for LLM request, compacted if necessary.
         """
-        budget = token_budget or self.max_tokens
+        budget = self._calculate_budget(token_budget, provider)
 
         # Check if compaction needed
         if self._should_compact(budget):
@@ -374,6 +380,43 @@ class PersistentContextManager:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+    def _calculate_budget(self, token_budget: int | None, provider: Any | None) -> int:
+        """Calculate effective token budget from provider or fallback to config.
+
+        Priority:
+        1. Explicit token_budget parameter (deprecated but supported)
+        2. Provider-based calculation: context_window - max_output_tokens - safety_margin
+        3. Configured max_tokens fallback
+        """
+        # Explicit budget takes precedence (for backward compatibility)
+        if token_budget is not None:
+            return token_budget
+
+        # Try provider-based dynamic budget
+        if provider is not None:
+            try:
+                info = provider.get_info()
+                defaults = info.defaults or {}
+                context_window = defaults.get("context_window")
+                max_output_tokens = defaults.get("max_output_tokens")
+
+                if context_window and max_output_tokens:
+                    safety_margin = 1000  # Buffer to avoid hitting hard limits
+                    budget = context_window - max_output_tokens - safety_margin
+                    logger.debug(
+                        "Calculated budget from provider: %d (context=%d, output=%d, safety=%d)",
+                        budget,
+                        context_window,
+                        max_output_tokens,
+                        safety_margin,
+                    )
+                    return budget
+            except Exception as e:
+                logger.debug("Could not get budget from provider: %s", e)
+
+        # Fall back to configured max_tokens
+        return self.max_tokens
+
     def _recalculate_tokens(self) -> None:
         """Recalculate token usage after compaction or state restore."""
         self._token_count = sum(len(str(msg)) // 4 for msg in self.messages)
