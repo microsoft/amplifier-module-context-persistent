@@ -83,39 +83,37 @@ class PersistentContextManager:
     async def add_message(self, message: dict[str, Any]) -> None:
         """Add a message to the context.
 
-        Note: This method does NOT auto-compact. Compaction is handled by the
-        orchestrator at strategic points (after tool batches complete, before
-        LLM requests) to avoid compacting mid-tool-execution.
+        Note: This method always accepts messages without hard limits.
+        Compaction is handled by the orchestrator at strategic points
+        (before LLM requests) to keep context within bounds.
 
-        Raises:
-            RuntimeError: If adding message would exceed max_tokens
+        Tool results MUST be added even if over threshold, otherwise
+        tool_use/tool_result pairing breaks. The orchestrator will
+        compact before the next LLM request.
         """
         # Estimate tokens for this message
         message_tokens = len(str(message)) // 4
 
-        # Check if adding this message would exceed hard limit
-        projected_total = self._token_count + message_tokens
-
-        if projected_total > self.max_tokens:
-            error_msg = (
-                f"Cannot add message: would exceed context limit "
-                f"({projected_total:,} tokens > {self.max_tokens:,} max). "
-                f"Current context: {self._token_count:,} tokens, "
-                f"message: {message_tokens:,} tokens. "
-                "Suggestions: reduce memory files, use shorter messages, "
-                "or increase max_tokens in context config."
-            )
-            logger.error(error_msg)
-            raise RuntimeError(error_msg)
-
+        # Add message (no rejection - compaction happens at orchestrator level)
         self.messages.append(message)
         self._token_count += message_tokens
+
+        # Warn if significantly over threshold (but don't reject)
+        usage = self._token_count / self.max_tokens
+        if usage > 1.0:
+            logger.warning(
+                "Context at %.1f%% of max (%d/%d tokens). Compaction will run before next LLM request.",
+                usage * 100,
+                self._token_count,
+                self.max_tokens,
+            )
+
         logger.debug(
             "Added message: %s - %d total messages, %d tokens (%.1f%%)",
             message.get("role", "unknown"),
             len(self.messages),
             self._token_count,
-            (self._token_count / self.max_tokens) * 100,
+            usage * 100,
         )
 
     async def get_messages(self) -> list[dict[str, Any]]:
