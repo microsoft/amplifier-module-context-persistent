@@ -5,7 +5,7 @@ requires-python = ">=3.11"
 [[package]]
 name = "amplifier-core"
 version = "1.0.0"
-source = { git = "https://github.com/microsoft/amplifier-core?rev=main#da3bafa3b0b5fe782373db59d8ec95043158cd99" }
+source = { git = "https://github.com/microsoft/amplifier-core?rev=main#904108b772d8949d48bdf413f7b1b63141fe84f5" }
 dependencies = [
     { name = "click" },
     { name = "pydantic" },
@@ -42,7 +42,7 @@ dev = [
 [[package]]
 name = "amplifier-module-context-simple"
 version = "1.0.0"
-source = { git = "https://github.com/microsoft/amplifier-module-context-simple?rev=main#1ac063195bee3096f19c38f03080171d7537e7eb" }
+source = { git = "https://github.com/microsoft/amplifier-module-context-simple?rev=main#e47a4fac1cf2788ef404464ccc73c6376bef5106" }
 
 [[package]]
 name = "annotated-types"

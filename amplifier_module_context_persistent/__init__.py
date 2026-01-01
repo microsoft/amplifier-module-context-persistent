@@ -85,6 +85,7 @@ async def mount(coordinator: ModuleCoordinator, config: dict[str, Any] | None = 
         truncate_boundary=config.get("truncate_boundary", 0.50),
         protected_recent=config.get("protected_recent", 0.10),
         truncate_chars=config.get("truncate_chars", 250),
+        hooks=getattr(coordinator, "hooks", None),
     )
 
     await context.initialize()
@@ -140,6 +141,7 @@ class PersistentContextManager(SimpleContextManager):
         truncate_boundary: float = 0.50,
         protected_recent: float = 0.10,
         truncate_chars: int = 250,
+        hooks: Any = None,
     ):
         """
         Initialize the persistent context manager.
@@ -159,9 +161,9 @@ class PersistentContextManager(SimpleContextManager):
             max_tokens=max_tokens,
             compact_threshold=compact_threshold,
             target_usage=target_usage,
-            truncate_boundary=truncate_boundary,
             protected_recent=protected_recent,
             truncate_chars=truncate_chars,
+            hooks=hooks,
         )
 
         # File-based persistence attributes
