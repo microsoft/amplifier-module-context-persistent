@@ -42,7 +42,7 @@ dev = [
 [[package]]
 name = "amplifier-module-context-simple"
 version = "1.0.0"
-source = { git = "https://github.com/microsoft/amplifier-module-context-simple?rev=main#2599962af51c49dad2666283f8a920ad3e76a406" }
+source = { git = "https://github.com/microsoft/amplifier-module-context-simple?rev=main#114eee7ac3b2341367a2d4fdde9dc4d5de86e2b3" }
 
 [[package]]
 name = "annotated-types"
