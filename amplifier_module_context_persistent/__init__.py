@@ -211,10 +211,19 @@ class PersistentContextManager(SimpleContextManager):
 
         Tool results MUST be added even if over threshold, otherwise
         tool_use/tool_result pairing breaks.
+
+        Timestamps are automatically injected into metadata for replay timing analysis.
         """
-        # Add timestamp if not present
-        if "timestamp" not in message:
-            message = {**message, "timestamp": datetime.now(UTC).isoformat(timespec="milliseconds")}
+        # Add timestamp in metadata if not already present (for replay timing)
+        existing_meta = message.get("metadata", {})
+        if "timestamp" not in existing_meta:
+            message = {
+                **message,
+                "metadata": {
+                    **existing_meta,
+                    "timestamp": datetime.now(UTC).isoformat(timespec="milliseconds"),
+                },
+            }
 
         # Add to in-memory list (used by parent's compaction)
         self.messages.append(message)
