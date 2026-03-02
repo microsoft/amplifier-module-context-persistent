@@ -8,7 +8,7 @@ authors = [
     { name = "Microsoft MADE:Explorations Team" },
 ]
 dependencies = [
-    "amplifier-module-context-simple @ git+https://github.com/microsoft/amplifier-module-context-simple@main",
+    "amplifier-module-context-simple",
 ]
 
 [project.entry-points."amplifier.modules"]
@@ -23,16 +23,10 @@ build-backend = "hatchling.build"
 [tool.uv]
 package = true
 
-[tool.uv.sources]
-amplifier-core = { git = "https://github.com/microsoft/amplifier-core", rev = "main" }
-
 [tool.hatch.build.targets.wheel]
 packages = [
     "amplifier_module_context_persistent",
 ]
-
-[tool.hatch.metadata]
-allow-direct-references = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
